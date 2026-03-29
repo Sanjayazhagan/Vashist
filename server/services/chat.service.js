@@ -1,3 +1,5 @@
+import pool from "../config/db.js";
+
 export const createChatService = async ({ userId, poolId, title }) => {
   // check user is part of pool
   const memberCheck = await pool.query(
@@ -101,5 +103,3 @@ export const askQuestionService = async ({ chatId, userId, question }) => {
 
   return qaRes.rows[0];
 };
-
-

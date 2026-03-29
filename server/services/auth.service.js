@@ -60,13 +60,13 @@ export const loginUser = async ({ email, password }) => {
 
   // generate tokens
   const accessToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-    expiresIn: "15m",
+    expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
   const refreshToken = jwt.sign(
     { userId: user.id },
     process.env.JWT_REFRESH_SECRET,
-    { expiresIn: "7d" },
+    { expiresIn:  process.env.JWT_REFRESH_EXPIRES_IN},
   );
 
   // store refresh token in DB
@@ -124,7 +124,7 @@ export const refreshAccessToken = async (token) => {
   }
 
   const newAccessToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-    expiresIn: "15m",
+    expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
   return newAccessToken;

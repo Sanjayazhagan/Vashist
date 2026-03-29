@@ -124,5 +124,13 @@ import userRoutes from "./routes/user.routes.js";
 
 app.use("/api/users", userRoutes);
 
+import chatRoutes from "./routes/chat.routes.js";
+
+app.use("/api/chats", chatRoutes);
+
+import notesRoutes from "./routes/notes.route.js";
+
+app.use("/api/notes", notesRoutes);
+
 
 
