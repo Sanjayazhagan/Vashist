@@ -30,7 +30,7 @@ export const signupUser = async ({ email, password }) => {
   );
 
   // send email
-  await sendVerificationEmail(email, verificationToken);
+  sendVerificationEmail(email, verificationToken);
 
   return result.rows[0];
 };
