@@ -10,24 +10,12 @@ import pool from "./config/db.js";
 
 const app = express();
 
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim()) 
-  : ["http://localhost:8080"]; // Fallback if .env is missing
-
+// --- "ALLOW ALL" CORS CONFIGURATION ---
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or Postman)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    origin: true, // Automatically allows any origin
+    credentials: true, // Keeps your auth cookies working
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
