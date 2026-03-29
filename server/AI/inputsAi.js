@@ -6,34 +6,38 @@ import { index, embeddings, llm } from './aiConfig.js';
  * FUNCTION 1: Extracts raw text from an uploaded image/PDF buffer.
  * Your Express route MUST 'await' this.
  */
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 export async function extractTextFromBinary(buffer, mimeType) {
   try {
     console.log(`👀 Gemini is extracting text from ${mimeType}...`);
     const base64String = buffer.toString("base64");
 
-    const message = new HumanMessage({
-      content: [
-        {
-          type: "text",
-          text: `You are a highly accurate document extraction tool. Extract the text from the attached document and format it using clean Markdown. 
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          mimeType: mimeType,
+          data: base64String,
+        },
+      },
+      {
+        text: `You are a highly accurate document extraction tool. Extract the text from the attached document and format it using clean Markdown. 
             
             Strict Rules:
             - Preserve the visual structure (headers, bullet points, bold text).
             - IF YOU SEE A DIAGRAM, GRAPH, OR DRAWING: Insert a blockquote starting with "> **[Diagram Description]:**" and write a highly detailed, educational explanation of exactly what the image shows and how the parts connect.
             - IF YOU SEE A DATA TABLE: Recreate it perfectly using standard Markdown table syntax.
-            - Do not add conversational filler. Do not wrap the final output in a markdown code block (\`\`\`markdown).`
-        },
-        {
-          type: "image_url",
-          image_url: { url: `data:${mimeType};base64,${base64String}` }
-        },
-      ],
-    });
+            - Do not add conversational filler. Do not wrap the final output in a markdown code block (\`\`\`markdown).`,
+      },
+    ]);
 
-    const response = await llm.invoke([message]);
+    const response = result.response.text();
     console.log("✅ Text successfully extracted!");
-    return response.content;
-
+    return response;
   } catch (error) {
     console.error("❌ Extraction error:", error);
     throw error;
