@@ -27,7 +27,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // ✅ Handle ALL preflight requests explicitly
+app.options(/.*/, cors(corsOptions)); // ✅ Handle ALL preflight requests (regex works in all Express versions)
 
 app.use(express.json());
 app.use(cookieParser()); // ✅ Before routes
