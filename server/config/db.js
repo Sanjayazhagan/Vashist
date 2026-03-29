@@ -8,8 +8,8 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   // Add this if your deployment provider (like Render/Heroku) requires SSL
   ssl: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false,
+  },
 });
 
 export default pool;
