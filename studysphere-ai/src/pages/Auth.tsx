@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BookOpen, ArrowRight, Loader2 } from "lucide-react";
 import { apiFetch, TokenStore } from "@/lib/api"; // ← shared utility
+import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,6 +16,7 @@ export default function Auth() {
   const [error, setError]         = useState("");
 
   const { login } = useApp();
+  const navigate = useNavigate();
 
   // ── Submit handler ─────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +45,7 @@ export default function Auth() {
 
       // Pass token (and optional user info) to app context
       login(token, data.user ?? null);
-
+      navigate("/"); // ← Add this line after login()
     } else {
       // ── Sign Up ─────────────────────────────────────────────────────────────
       // Note: Postman collection only sends { email, password } for signup.

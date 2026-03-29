@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import ReactMarkdown from "react-markdown";
-import { apiFetch } from "@/lib/api"; // ← shared utility
+import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -24,7 +24,7 @@ interface ApiPool {
 interface ChatSession {
   id: number;
   title: string;
-  poolId: number;
+  poolid: number;   // API returns lowercase
   createdAt?: string;
 }
 
@@ -48,23 +48,55 @@ export default function PoolChat() {
   const [sidebarOpen, setSidebarOpen]         = useState(true);
   const [isTyping, setIsTyping]               = useState(false);
   const [loadingHistory, setLoadingHistory]   = useState(false);
+  const [tokenBalance, setTokenBalance]       = useState<number>(0);
 
-  // Token balance is returned by the server per pool or user details
-  const [tokenBalance, setTokenBalance] = useState<number>(0);
-
-  // New-chat dialog
   const [newChatOpen, setNewChatOpen]   = useState(false);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [creatingChat, setCreatingChat] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ── Load message history for a session ────────────────────────────────────
+  // API returns: { history: [{ id, groupid, question, answer }] }
+  // Each entry is expanded into two bubbles: user (question) + assistant (answer)
+  const loadHistory = useCallback(async (chatId: number) => {
+    setLoadingHistory(true);
+    const { data, error } = await apiFetch<any>(`/api/chats/${chatId}`);
+    if (error) {
+      toast.error(`Could not load history: ${error}`);
+    } else {
+      const raw: any[] = data?.history ?? data?.messages ?? (Array.isArray(data) ? data : []);
+      const msgs: ChatMessage[] = raw.flatMap((entry) => {
+        if (entry.question !== undefined && entry.answer !== undefined) {
+          return [
+            { id: entry.id,       role: "user"      as const, content: entry.question },
+            { id: entry.id + 0.5, role: "assistant" as const, content: entry.answer   },
+          ];
+        }
+        // Already in role/content shape
+        return [entry as ChatMessage];
+      });
+      setMessages(msgs);
+    }
+    setLoadingHistory(false);
+  }, []);
+
+  // ── Load sessions — defined BEFORE useEffect so init() can call it ────────
+  const loadSessions = useCallback(async (): Promise<ChatSession[]> => {
+    const { data: chatsData } = await apiFetch<{ chats: ChatSession[] } | ChatSession[]>("/api/chats");
+    const all: ChatSession[] = Array.isArray(chatsData)
+      ? chatsData
+      : (chatsData as any)?.chats ?? [];
+    const forPool = all.filter((c) => String(c.poolid) === poolId);
+    setSessions(forPool);
+    return forPool;
+  }, [poolId]);
+
   // ── Fetch pool info & sessions on mount ───────────────────────────────────
   useEffect(() => {
     if (!poolId) return;
 
     const init = async () => {
-      // Load pool list to find this pool's name
       const { data: poolsData } = await apiFetch<ApiPool[] | { pools: ApiPool[] }>("/api/pools/");
       const poolsArr: ApiPool[] = Array.isArray(poolsData)
         ? poolsData
@@ -72,7 +104,6 @@ export default function PoolChat() {
       const found = poolsArr.find((p) => String(p.id) === poolId) ?? null;
       setPool(found);
 
-      // Token balance for this pool (may come from user pool details endpoint)
       const { data: userPoolData } = await apiFetch<any>(`/api/users/me/${poolId}`);
       if (userPoolData?.tokenBalance !== undefined) {
         setTokenBalance(userPoolData.tokenBalance);
@@ -80,41 +111,15 @@ export default function PoolChat() {
         setTokenBalance(userPoolData.tokens);
       }
 
-      // Load existing chats and filter to this pool
-      await loadSessions();
+      const forPool = await loadSessions();
+      if (forPool.length > 0) {
+        setActiveSessionId(forPool[0].id);
+        await loadHistory(forPool[0].id);
+      }
     };
 
     init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [poolId]);
-
-  const loadSessions = useCallback(async () => {
-    const { data: chatsData } = await apiFetch<ChatSession[] | { chats: ChatSession[] }>("/api/chats");
-    const all: ChatSession[] = Array.isArray(chatsData)
-      ? chatsData
-      : (chatsData as any)?.chats ?? [];
-    const forPool = all.filter((c) => String(c.poolId) === poolId);
-    setSessions(forPool);
-    if (forPool.length > 0 && activeSessionId === null) {
-      setActiveSessionId(forPool[0].id);
-      loadHistory(forPool[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [poolId]);
-
-  // ── Load message history for a session ────────────────────────────────────
-  const loadHistory = async (chatId: number) => {
-    setLoadingHistory(true);
-    const { data, error } = await apiFetch<any>(`/api/chats/${chatId}`);
-    if (error) {
-      toast.error(`Could not load history: ${error}`);
-    } else {
-      const msgs: ChatMessage[] =
-        data?.messages ?? data?.chat?.messages ?? (Array.isArray(data) ? data : []);
-      setMessages(msgs);
-    }
-    setLoadingHistory(false);
-  };
+  }, [poolId, loadSessions, loadHistory]);
 
   // ── Switch active session ──────────────────────────────────────────────────
   const handleSelectSession = (id: number) => {
@@ -147,7 +152,6 @@ export default function PoolChat() {
   };
 
   // ── Send message ───────────────────────────────────────────────────────────
-  // API: POST /api/chats/:chatId/ask  { question: string }
   const handleSend = async () => {
     if (!input.trim() || activeSessionId === null) return;
     if (tokenBalance <= 0) {
@@ -171,11 +175,10 @@ export default function PoolChat() {
 
     if (error || !data) {
       toast.error(error || "AI failed to respond. Please try again.");
-      setTokenBalance((b) => b + 1); // Refund on failure
+      setTokenBalance((b) => b + 1);
       return;
     }
 
-    // Server may return the answer under different keys
     const answer: string =
       data?.answer ??
       data?.response ??
@@ -362,11 +365,7 @@ export default function PoolChat() {
           )}
           <div className="flex gap-2">
             <Textarea
-              placeholder={
-                tokenBalance > 0
-                  ? "Ask a question…"
-                  : "Upload notes to earn tokens"
-              }
+              placeholder={tokenBalance > 0 ? "Ask a question…" : "Upload notes to earn tokens"}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={tokenBalance === 0 || !activeSessionId}

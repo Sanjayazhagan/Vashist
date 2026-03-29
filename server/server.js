@@ -9,7 +9,13 @@ dotenv.config();
 import pool from "./config/db.js";
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:8080",
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 
 // --- 1. Bulletproof Swagger Configuration ---
