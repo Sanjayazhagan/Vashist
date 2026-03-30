@@ -5,6 +5,23 @@
 
 ---
 
+## Email Service Note (For Judges)
+
+Email delivery may be delayed in the deployed environment due to third-party service limitations.
+
+For quick testing, please use the following demo credentials:
+
+**Email** : user1@gmail.com  
+**Password** : keerthivasan
+
+**Email** : user2@gmail.com  
+**Password** : keerthivasan
+
+
+> These credentials are provided solely for hackathon evaluation.
+
+---
+
 ## Demo Video
 🎬 Watch here: https://drive.google.com/file/d/14KjZ_LxsBA_a9Jx7uRLZA6Wba89Mymff/view?usp=sharing
 
@@ -31,21 +48,22 @@ StudySphere is a decentralized, pool-based notes sharing and RAG (Retrieval-Augm
 ---
 
 
+## Tech Stack
 
----
-
-## Tech Stack 
-- **Frontend:** Reactjs
-- **Backend:** Node.js, Express.js 
-- **Database:** PostgreSQL  
-- **Auth:** JWT (Access + Refresh Tokens)  
-- **File Handling:** Multer (memory storage)  
-- **AI Integration:** RAG-based system  
+**Backend** : Node.js, Express  
+**Database** : PostgreSQL  
+**Authentication** : JWT, bcrypt  
+**AI** : LangChain, Gemini
+**Vector DB** : Pinecone    
+**File Uploads** : Multer  
+**Communication** : Nodemailer   
+**Utilities** : dotenv  
+**Dev Tools** : Nodemon
 
 ---
 
 ## System Architecture
-
+![sysarch](screenshots/excalidraw.png)
 🔗 Excalidraw ER Diagram: https://excalidraw.com/#room=9775246f05290af03caa,csK_0FDNfITTyfIOXGS2qw
 
 ---
@@ -250,3 +268,9 @@ npm run seed
 - Deployment (10%): Hosted at: https://vashist-5j8tek0do-sanjay-azhagans-projects.vercel.app?_vercel_share=P2sezmBuHw6kwYUuQ0s6N4vmf9RBdgOc
 
 ---
+
+## Future Improvements
+
+- **Personal Chat Workspace**  
+  Introduce a dedicated chat section where users can upload and store their notes in a vector database. This will enable an AI-powered assistant to answer questions, provide insights, and interact intelligently based on the user’s personal knowledge base.
+
