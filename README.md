@@ -68,7 +68,7 @@ StudySphere is a decentralized, pool-based notes sharing and RAG (Retrieval-Augm
 
 ---
 
-##Full Flow Explanation
+## Full Flow Explanation
 
 ### 1. Authentication
 - User signs up → email verification  
@@ -134,31 +134,57 @@ Upload Notes → Earn Tokens → Ask Questions → Spend Tokens → Repeat
 ---
 
 ## API Endpoints
-### Auth
-POST /api/auth/signup
-POST /api/auth/login
-GET /api/auth/verify
-POST /api/auth/refresh
-POST /api/auth/logout
-### Pools
-POST /api/pools
-POST /api/pools/join
-GET /api/pools
-### Notes
-POST /api/notes
-GET /api/notes/:poolId
-GET /api/notes/:noteId
-PUT /api/notes/:noteId
-DELETE /api/notes/:noteId
-### Chat
-POST /api/chats
-GET /api/chats/:poolId
-### Q&A
-POST /api/chats/:chatId/ask
-GET /api/chats/:chatId/history
-### Dashboard
-GET /api/dashboard
-GET /api/pools/:poolId/details
+
+### Auth Routes
+
+- POST `/auth/signup` → Register a new user  
+- GET `/auth/verify/:token` → Verify email  
+- POST `/auth/signin` → Login user  
+- POST `/auth/refresh` → Refresh access token  
+- POST `/auth/logout` → Logout user  
+
+---
+
+### User Routes
+
+- GET `/users/me` → Get current user details  
+- GET `/users/me/:id` → Get user pool details  
+
+---
+
+### Pool Routes
+
+- POST `/pools` → Create a pool  
+- POST `/pools/join` → Join a pool using join code  
+- GET `/pools` → Get all user pools  
+
+---
+
+### Chat Routes
+
+- POST `/chats` → Create a chat  
+- GET `/chats` → Get all chats  
+- POST `/chats/:chatId/ask` → Ask a question  
+- GET `/chats/:chatId` → Get chat history  
+
+---
+
+### Notes Routes
+
+- POST `/notes` → Upload notes (multipart/form-data)  
+- GET `/notes/:poolId` → Get all notes in a pool  
+- GET `/notes/:noteId` → Get a single note  
+
+---
+
+## Authentication
+
+Most routes require:
+
+```bash
+Authorization: Bearer <access_token>
+```
+Some routes use cookies for refresh tokens.
 
 ---
 
